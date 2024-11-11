@@ -1,0 +1,151 @@
+#define Pin_Linea_derecho A1
+#define Pin_Linea_izquierdo A5
+#define Pin_Oponente_centro A3
+#define Pin_Oponente_derecho A2
+#define Pin_Oponente_izquierda A4
+#define PIN_MOTOR_LEFT_1        6
+#define PIN_MOTOR_LEFT_2        5
+#define PIN_MOTOR_RIGHT_1       11
+#define PIN_MOTOR_RIGHT_2       10
+#define PIN_RED_LED             13
+#define PIN_START_MODULE        3
+#define PIN_BUZZER              4
+#define PIN_DIP_SW_1            7
+#define PIN_DIP_SW_2            8
+#define PIN_DIP_SW_3            9
+int start_module_status = 0;
+
+unsigned long tiempo_1;
+unsigned long tiempo_2;
+unsigned long tiempo_3;
+unsigned long tiempo_4;
+unsigned long tiempo_5;
+unsigned long tiempo_6;
+unsigned long tiempo_7;
+unsigned long tiempo_8;
+unsigned long tiempo_9;
+
+void delante (){
+  analogWrite(PIN_MOTOR_LEFT_1, 200);
+    digitalWrite(PIN_MOTOR_LEFT_2, LOW);
+    //Motor Derecho
+    analogWrite(PIN_MOTOR_RIGHT_1, 200);
+    digitalWrite(PIN_MOTOR_RIGHT_2, LOW);
+}
+
+void atras(){
+  analogWrite(PIN_MOTOR_LEFT_2, 200);
+    digitalWrite(PIN_MOTOR_LEFT_1, LOW);
+    //Motor Derecho
+    analogWrite(PIN_MOTOR_RIGHT_2, 200);
+    digitalWrite(PIN_MOTOR_RIGHT_1, LOW);
+
+}
+void set_motors(int16_t l_motor_value, int16_t r_motor_value){
+    //-----Left Motor
+    if(l_motor_value > 0){
+        digitalWrite(PIN_MOTOR_LEFT_1, HIGH);
+        analogWrite(PIN_MOTOR_LEFT_2, 255-l_motor_value);
+    }
+    else{
+        digitalWrite(PIN_MOTOR_LEFT_2, HIGH);
+        analogWrite(PIN_MOTOR_LEFT_1, 255+l_motor_value);
+    }
+    //-----Right Motor
+    if(r_motor_value > 0){
+        digitalWrite(PIN_MOTOR_RIGHT_1, HIGH);
+        analogWrite(PIN_MOTOR_RIGHT_2, 255-r_motor_value);
+    }
+    else{
+        digitalWrite(PIN_MOTOR_RIGHT_2, HIGH);
+        analogWrite(PIN_MOTOR_RIGHT_1, 255+r_motor_value);
+    }
+}
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(Pin_Linea_derecho,INPUT);
+  pinMode(Pin_Linea_izquierdo,INPUT);
+  pinMode(Pin_Oponente_centro,INPUT);
+  pinMode(Pin_Oponente_derecho,INPUT);
+  pinMode(PIN_MOTOR_LEFT_1, OUTPUT);
+  pinMode(PIN_MOTOR_LEFT_2, OUTPUT);
+  pinMode(PIN_MOTOR_RIGHT_1, OUTPUT);
+  pinMode(PIN_MOTOR_RIGHT_2, OUTPUT);
+  tiempo_1=millis();
+  tiempo_2=millis();
+  tiempo_3=millis();
+  tiempo_4=millis();
+  tiempo_5=millis();
+  tiempo_6=millis();
+  tiempo_7=millis();
+  tiempo_8=millis();
+  tiempo_9=millis();
+  Serial.begin(9600);
+    attachInterrupt(digitalPinToInterrupt(PIN_START_MODULE), end_match, FALLING);    // Interrupción que usaremos para detener el robot (control SONY y módulo de arranque).
+
+  while(start_module_status == 0){
+    start_module_status = digitalRead(PIN_START_MODULE);
+  }
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  
+  if(millis()-tiempo_1>=110){
+    if(digitalRead(Pin_Oponente_centro)==1){
+      set_motors(220,220);
+    }
+    if(digitalRead(Pin_Oponente_izquierda)==1){
+      set_motors(220,-220);
+    }
+     if(digitalRead(Pin_Oponente_derecho)==1){
+      set_motors(-220,220);
+    }
+    tiempo_1=millis();
+  }
+  
+  
+  if (millis()-tiempo_2>=80){
+    if(analogRead(Pin_Linea_derecho)<40){
+      if (millis()- tiempo_3>=400){
+        set_motors(-190,-180);
+        tiempo_3=millis();
+      }
+      
+      if(millis()-tiempo_4>=100){
+        set_motors(180,-180);
+        tiempo_4=millis();
+      }
+      
+    }
+    if(analogRead(Pin_Linea_izquierdo)<40){
+      Serial.println("Izquierdo blanco");
+      if (millis()- tiempo_5>=400){
+        set_motors(-180,-180);
+        tiempo_5=millis();
+      }
+    
+      if(millis()-tiempo_6>=100){
+        set_motors(-180,180);
+        tiempo_6=millis();
+      }
+      
+    }
+    tiempo_2=millis();
+  }
+}
+void end_match(){
+    stop_movement();
+    while(1){
+      digitalWrite(PIN_RED_LED,HIGH);
+    }
+}
+void stop_movement(void){
+    //Frenamos motor izquierdo
+    digitalWrite(PIN_MOTOR_LEFT_1, HIGH);
+    digitalWrite(PIN_MOTOR_LEFT_2, HIGH);
+    //Frenamos motor derecho
+    digitalWrite(PIN_MOTOR_RIGHT_1, HIGH);
+    digitalWrite(PIN_MOTOR_RIGHT_2, HIGH);  
+} 
+
